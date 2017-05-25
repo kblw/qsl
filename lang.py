@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import re
+from dateutil.parser import parse as date_parse
 
 OK = 0
 ERROR = 1
@@ -25,7 +26,10 @@ def atom_parser(input):
         try:
             return OK, float(input), ''
         except:
-            return OK, input.strip(), ''
+            try:
+                return OK, date_parse(input), ''
+            except:
+                return OK, input, ''
 
 
 def list_parser(input):
@@ -71,7 +75,7 @@ def parser(input):
     result = {'filters': {}, 'excludes': {}}
     for query in input.split(';'):
         try:
-            var, expr = query.split(":")
+            var, expr = query.split(":", 1)
             tag, output, _ = variable_parser(var.strip())
             if tag is OK:
                 p, var = output
