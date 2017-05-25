@@ -1,6 +1,6 @@
 ## QSL - query search language
 
-####Usage for parsing search variable in query string (for HTTP requests)
+#### Usage for parsing search variable in query string (for HTTP requests)
 
 ### Grammar
 
