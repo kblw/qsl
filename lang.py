@@ -2,6 +2,10 @@
 
 import re
 from dateutil.parser import parse as date_parse
+from string import strip
+from itertools import imap
+
+from structures import Range
 
 OK = 0
 ERROR = 1
@@ -29,6 +33,10 @@ def atom_parser(input):
             try:
                 return OK, date_parse(input), ''
             except:
+                if input.lower() == 'false':
+                    return OK, False, ''
+                if input.lower() == 'true':
+                    return OK, True, ''
                 return OK, input, ''
 
 
@@ -54,18 +62,19 @@ def interval_parser(input):
 
     result = []
 
-    for expr in input.split('..'):
-        tag, output, _ = expression_parser(expr)
+    for expr in imap(strip, input.split('..')):
+        is_include = expr.startswith('=')
+        tag, output, _ = expression_parser(expr[is_include:])
         if tag is ERROR:
             return tag, "Unexpected expression: {}".format(expr), input
-        result.append(output or None)
+        result.append((is_include, output or None))
 
-    return OK, tuple(result), ''
+    return OK, Range(*result), ''
 
 
 def expression_parser(input):
     input = input.strip()
-    for parser in [list_parser, interval_parser, atom_parser]:
+    for parser in [interval_parser, list_parser, atom_parser]:
         tag, output, input = parser(input)
         if tag is OK:
             return tag, output, input
@@ -74,6 +83,8 @@ def expression_parser(input):
 def parser(input):
     result = {'filters': {}, 'excludes': {}}
     for query in input.split(';'):
+        if not query:
+            continue
         try:
             var, expr = query.split(":", 1)
             tag, output, _ = variable_parser(var.strip())
